@@ -1,2 +1,2 @@
-﻿This plugin is triggered on SESE-initiated world save.
+This plugin is triggered on SESE-initiated world save.
 It will remove all identities and associated information, such as chat history, GPS waypoints, and toolbar setup for all identities found in Sandbox.sbc which do not correspond to either a faction member or a CubeBlock owner.
