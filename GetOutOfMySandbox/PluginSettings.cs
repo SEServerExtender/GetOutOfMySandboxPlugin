@@ -13,6 +13,7 @@
 		private static PluginSettings _instance;
 		private bool _loading;
 		private bool _ignoreFactionMembership;
+		private bool _deleteNpcShips;
 
 		/// <summary>Singleton instance of the <see cref="PluginSettings"/> class.</summary>
 		internal static PluginSettings Instance { get { return _instance ?? ( _instance = new PluginSettings( ) ); } }
@@ -114,6 +115,17 @@
 			set
 			{
 				_ignoreFactionMembership = value;
+				OnSettingsChanged( );
+			}
+		}
+
+		[XmlElement( Namespace = "SESE:Plugin:GetOutOfMySandbox", Type = typeof( bool ) )]
+		public bool DeleteNpcShips
+		{
+			get { return _deleteNpcShips; }
+			set
+			{
+				_deleteNpcShips = value;
 				OnSettingsChanged( );
 			}
 		}
