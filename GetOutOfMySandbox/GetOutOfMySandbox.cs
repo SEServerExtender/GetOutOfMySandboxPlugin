@@ -75,7 +75,8 @@
 				if ( PluginSettings.Instance.DeleteNpcShips )
 				{
 					IEnumerable<string> npcIds = sandboxSbc.XPathSelectElements( "/MyObjectBuilder_Checkpoint/Identities/MyObjectBuilder_Identity[DisplayName='Neutral NPC']" ).Select( n => n.Element( XName.Get( "IdentityId" ) ).Value );
-					Log.Info( "Deleting NPC ships for NPC IDs: {0}", string.Join( ", ", npcIds ) );
+					if ( npcIds.Any( ) )
+						Log.Info( "Deleting NPC ships for NPC IDs: {0}", string.Join( ", ", npcIds ) );
 					foreach ( string id in npcIds )
 					{
 						sectorFile.XPathSelectElements( string.Format( "/MyObjectBuilder_Sector/SectorObjects/MyObjectBuilder_EntityBase[CubeBlocks/MyObjectBuilder_CubeBlock/Owner='{0}']", id ) ).Remove( );
