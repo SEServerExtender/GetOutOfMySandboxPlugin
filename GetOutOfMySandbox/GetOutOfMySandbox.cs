@@ -22,6 +22,8 @@
 		private Thread _pluginThread;
 		private bool _running;
 		private static readonly object Locker = new object( );
+		readonly List<long> _entitiesAlreadyRemoved = new List<long>();
+		List<long> _identitiesAlreadyRemoved = new List<long>();
 
 		public void Init( )
 		{
@@ -74,10 +76,17 @@
 				XDocument sectorFile = XDocument.Load( sectorPath );
 				if ( PluginSettings.Instance.DeleteNpcShips )
 				{
-					IEnumerable<string> npcIds = sandboxSbc.XPathSelectElements( "/MyObjectBuilder_Checkpoint/Identities/MyObjectBuilder_Identity[DisplayName='Neutral NPC']" ).Select( n => n.Element( XName.Get( "IdentityId" ) ).Value );
-					if ( npcIds.Any( ) )
-						Log.Info( "Deleting NPC ships for NPC IDs: {0}", string.Join( ", ", npcIds ) );
-					foreach ( string id in npcIds )
+					long[ ] npcIds =
+						sandboxSbc.XPathSelectElements( "/MyObjectBuilder_Checkpoint/Identities/MyObjectBuilder_Identity[DisplayName='Neutral NPC']" )
+						          .Select( n => long.Parse( n.Element( XName.Get( "IdentityId" ) ).Value ) )
+						          .ToArray( );
+					long[ ] newEntitiesToRemove = npcIds.Except( _entitiesAlreadyRemoved ).ToArray(  );
+					if ( newEntitiesToRemove.Any( ) )
+					{
+						Log.Info( "Deleting NPC ships for NPC IDs: {0}", string.Join( ", ", newEntitiesToRemove ) );
+						_entitiesAlreadyRemoved.AddRange( newEntitiesToRemove );
+					}
+					foreach ( long id in npcIds )
 					{
 						sectorFile.XPathSelectElements( string.Format( "/MyObjectBuilder_Sector/SectorObjects/MyObjectBuilder_EntityBase[CubeBlocks/MyObjectBuilder_CubeBlock/Owner='{0}']", id ) ).Remove( );
 					}
@@ -87,21 +96,24 @@
 				IEnumerable<XElement> allIdentities = sandboxSbc.XPathSelectElements( "/MyObjectBuilder_Checkpoint/Identities/MyObjectBuilder_Identity/IdentityId" );
 				IEnumerable<XElement> cubeBlockOwners = sectorFile.XPathSelectElements( "/MyObjectBuilder_Sector/SectorObjects/MyObjectBuilder_EntityBase/CubeBlocks/MyObjectBuilder_CubeBlock/Owner" );
 				IEnumerable<XElement> factionMembers = sandboxSbc.XPathSelectElements( "/MyObjectBuilder_Checkpoint/Factions/Factions/MyObjectBuilder_Faction/Members/MyObjectBuilder_FactionMember/PlayerId" );
-				List<string> idsToRemove = new List<string>( allIdentities.Select( o => o.Value ).Distinct( ).ToArray( ) );
+				List<long> idsToRemove = allIdentities.Select( o => long.Parse( o.Value ) ).Distinct( ).ToList( );
 
-
-				string[ ] cubeBlockOwnerIds = cubeBlockOwners.Select( o => o.Value ).Distinct( ).ToArray( );
+				long[ ] cubeBlockOwnerIds = cubeBlockOwners.Select( o => long.Parse( o.Value ) ).Distinct( ).ToArray( );
 				idsToRemove.RemoveAll( o => cubeBlockOwnerIds.Contains( o ) );
 
 				if ( !PluginSettings.Instance.IgnoreFactionMembership )
 				{
-					string[ ] factionMemberIds = factionMembers.Select( f => f.Value ).Distinct( ).ToArray( );
+					long[ ] factionMemberIds = factionMembers.Select( f => long.Parse( f.Value ) ).Distinct( ).ToArray( );
 					idsToRemove.RemoveAll( o => factionMemberIds.Contains( o ) );
 				}
 
-				foreach ( string i in idsToRemove )
+				foreach ( long i in idsToRemove )
 				{
-					Log.Info( "Removing identity {0}", i );
+					if ( !_identitiesAlreadyRemoved.Contains( i ) )
+					{
+						Log.Info( "Removing identity {0}", i );
+						_identitiesAlreadyRemoved.Add( i );
+					}
 					//Remove toolbar settings, etc
 					sandboxSbc.XPathSelectElements( string.Format( "/MyObjectBuilder_Checkpoint/AllPlayersData/dictionary/item[Value/IdentityId='{0}']", i ) ).Remove( );
 
