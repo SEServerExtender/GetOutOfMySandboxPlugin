@@ -67,9 +67,6 @@
     <Reference Include="VRage">
       <HintPath>..\..\SEServerExtender\SEServerExtender\bin\x64\Release\VRage.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Data">
-      <HintPath>..\..\SEServerExtender\SEServerExtender\bin\x64\Release\VRage.Data.dll</HintPath>
-    </Reference>
     <Reference Include="VRage.Input">
       <HintPath>..\..\SEServerExtender\SEServerExtender\bin\x64\Release\VRage.Input.dll</HintPath>
     </Reference>
